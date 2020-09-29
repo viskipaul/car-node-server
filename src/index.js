@@ -35,7 +35,7 @@ class Item {
 }
 
 const items = [];
-for (let i = 0; i < 21; i++) {
+for (let i = 0; i < 3; i++) {
   items.push(new Item({ id: `${i}`, text: `item ${i}`, date: new Date(Date.now() + i), version: 1 }));
 }
 let lastUpdated = items[items.length - 1].date;
@@ -64,11 +64,12 @@ router.get('/item', ctx => {
     .filter(item => text ? item.text.indexOf(text) !== -1 : true)
     .sort((n1, n2) => -(n1.date.getTime() - n2.date.getTime()));
   const offset = (page - 1) * pageSize;
-  ctx.response.body = {
-    page,
-    items: sortedItems.slice(offset, offset + pageSize),
-    more: offset + pageSize < sortedItems.length
-  };
+  // ctx.response.body = {
+  //   page,
+  //   items: sortedItems.slice(offset, offset + pageSize),
+  //   more: offset + pageSize < sortedItems.length
+  // };
+  ctx.response.body = items;
   ctx.response.status = 200;
 });
 
@@ -98,7 +99,7 @@ const createItem = async (ctx) => {
   items.push(item);
   ctx.response.body = item;
   ctx.response.status = 201; // CREATED
-  broadcast({ event: 'created', item });
+  broadcast({ event: 'created', payload: { item } });
 };
 
 router.post('/item', async (ctx) => {
@@ -135,7 +136,7 @@ router.put('/item/:id', async (ctx) => {
   lastUpdated = new Date();
   ctx.response.body = item;
   ctx.response.status = 200; // OK
-  broadcast({ event: 'updated', item });
+  broadcast({ event: 'updated', payload: { item } });
 });
 
 router.del('/item/:id', ctx => {
@@ -145,7 +146,7 @@ router.del('/item/:id', ctx => {
     const item = items[index];
     items.splice(index, 1);
     lastUpdated = new Date();
-    broadcast({ event: 'deleted', item });
+    broadcast({ event: 'deleted', payload: { item } });
   }
   ctx.response.status = 204; // no content
 });
@@ -157,7 +158,7 @@ setInterval(() => {
   items.push(item);
   console.log(`
    ${item.text}`);
-  broadcast({ event: 'created', item });
+  broadcast({ event: 'created', payload: { item } });
 }, 15000);
 
 app.use(router.routes());
